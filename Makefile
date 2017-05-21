@@ -21,7 +21,7 @@ build:
 	python setup.py build
 
 clean:
-	git clean -fd
+	git clean -fdx
 
 deb:
 	echo 'nothing here yet'
