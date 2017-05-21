@@ -10,12 +10,14 @@ DIST_DIR=dist
 help:
 	@echo "Use: \`make <target>' where <target> is one of"
 	@echo "  deb         build .deb package (only on Debian based distros)"
+	@echo "  dev         setup dev environment with virtualenv"
 	@echo "  docs        generate all docs including man pages"
 	@echo "  lint        check $(NAME) sources with pylint"
 	@echo "  sdist       build source .tar.gz package"
 	@echo "  rpm         build .rpm package (only on RH based distros)"
 	@echo "  sdist       build source .tar.gz package"
 	@echo "  test        run whole test suit of $(NAME)"
+	@echo "  venv        setup virtualenv"
 
 build:
 	python setup.py build
@@ -26,14 +28,11 @@ clean:
 deb:
 	echo 'nothing here yet'
 
-dev:
-	pip install -r requirements.devel
+dev: venv
+	venv/bin/pip install -Ur requirements.devel
 
 docs:
 	echo 'nothing here yet'
-
-init:
-	pip install -r requirements.txt
 
 lint: build
 	pylint $(BUILD_DIR)/$(NAME)
@@ -46,6 +45,13 @@ sdist:
 
 test:
 	cd $(TDIR); python -m unittest discover -v --pattern=*_test.py
+
+venv: venv/bin/activate
+
+venv/bin/activate: requirements.txt
+	test -d venv || virtualenv venv
+	venv/bin/pip install -Ur requirements.txt
+	touch venv/bin/activate
 
 all: clean lint test docs sdist deb rpm
 
