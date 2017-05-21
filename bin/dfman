@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
 """Executable script for dfman"""
 
 
-def main(args=None):
+from dfman import core
+
+
+def main():
     """The main routine"""
-    pass
+    core.main()
 
 
 if __name__ == '__main__':

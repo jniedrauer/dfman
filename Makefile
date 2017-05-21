@@ -1,11 +1,11 @@
 NAME=dfman
-
 VERSION=$(shell PYTHONPATH=. python -c "from $(NAME).__pkginfo__ import version; print version")
-
+VENV=venv
+PIP=$(VENV)/bin/pip
+PYLINT=$(VENV)/bin/pylint
 SDIR=$(NAME)
 TDIR=tests
 BUILD_DIR=build/lib
-DIST_DIR=dist
 
 help:
 	@echo "Use: \`make <target>' where <target> is one of"
@@ -19,6 +19,15 @@ help:
 	@echo "  test        run whole test suit of $(NAME)"
 	@echo "  venv        setup virtualenv"
 
+$(PIP):
+	virtualenv $(VENV)
+
+venv: $(VENV)/bin/activate
+
+$(VENV)/bin/activate: requirements.txt
+	test -d $(VENV) || virtualenv $(VENV)
+	$(PIP) install -Ur requirements.txt
+
 build:
 	python setup.py build
 
@@ -29,13 +38,13 @@ deb:
 	echo 'nothing here yet'
 
 dev: venv
-	venv/bin/pip install -Ur requirements.devel
+	$(PIP) install -Ur requirements.devel
 
 docs:
 	echo 'nothing here yet'
 
 lint: build
-	pylint $(BUILD_DIR)/$(NAME)
+	$(PYLINT) $(BUILD_DIR)/$(NAME)
 
 rpm:
 	echo 'nothing here yet'
@@ -45,13 +54,6 @@ sdist:
 
 test:
 	cd $(TDIR); python -m unittest discover -v --pattern=*_test.py
-
-venv: venv/bin/activate
-
-venv/bin/activate: requirements.txt
-	test -d venv || virtualenv venv
-	venv/bin/pip install -Ur requirements.txt
-	touch venv/bin/activate
 
 all: clean lint test docs sdist deb rpm
 
