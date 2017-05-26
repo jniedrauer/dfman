@@ -1,5 +1,5 @@
 NAME=dfman
-VERSION=$(shell PYTHONPATH=. python -c "from $(NAME).__pkginfo__ import version; print version")
+VERSION=$(shell PYTHONPATH=. python -c "from $(NAME).__pkginfo__ import version; print(version)")
 VENV=venv
 PIP=$(VENV)/bin/pip
 PYLINT=$(VENV)/bin/pylint
@@ -46,15 +46,18 @@ docs:
 lint: build
 	$(PYLINT) $(BUILD_DIR)/$(NAME)
 
+localinstall:
+	$(PIP) install . --upgrade
+
 rpm:
 	echo 'nothing here yet'
 
 sdist:
 	python setup.py sdist
 
-test:
-	cd $(TDIR); python -m unittest discover -v --pattern=*_test.py
+test: localinstall
+	python -m unittest discover -v --start-directory=$(TDIR) --pattern=*_test.py
 
 all: clean lint test docs sdist deb rpm
 
-.PHONY: help build clean dev init lint sdist test all
+.PHONY: help build clean dev init lint localinstall sdist test all
