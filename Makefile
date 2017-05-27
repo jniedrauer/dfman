@@ -13,7 +13,6 @@ help:
 	@echo "  dev         setup dev environment with virtualenv"
 	@echo "  docs        generate all docs including man pages"
 	@echo "  lint        check $(NAME) sources with pylint"
-	@echo "  sdist       build source .tar.gz package"
 	@echo "  rpm         build .rpm package (only on RH based distros)"
 	@echo "  sdist       build source .tar.gz package"
 	@echo "  test        run whole test suit of $(NAME)"
@@ -28,9 +27,6 @@ $(VENV)/bin/activate: requirements.txt
 	test -d $(VENV) || virtualenv $(VENV)
 	$(PIP) install -Ur requirements.txt
 
-build:
-	python setup.py build
-
 clean:
 	git clean -fdx
 
@@ -43,11 +39,8 @@ dev: venv
 docs:
 	echo 'nothing here yet'
 
-lint: build
-	$(PYLINT) $(BUILD_DIR)/$(NAME)
-
-localinstall:
-	$(PIP) install . --upgrade
+lint:
+	$(PYLINT) $(NAME)
 
 rpm:
 	echo 'nothing here yet'
@@ -60,4 +53,4 @@ test:
 
 all: clean lint test docs sdist deb rpm
 
-.PHONY: help build clean dev init lint localinstall sdist test all
+.PHONY: help clean dev lint sdist test all
