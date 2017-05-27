@@ -19,13 +19,14 @@ class Config(object):
 
     def setup_config(self):
         """Initialize configuration files and directories"""
-        if not os.path.isdir(const.USER_PATH):
-            os.makedirs(const.USER_PATH)
         if not os.path.isfile(self.cfg_file):
+            self.create_default_user_cfg_path()
             self.create_default_user_cfg()
 
     def create_default_user_cfg(self):
         """Create the stock user config file"""
+        if not os.path.isdir(const.USER_PATH):
+            os.makedirs(const.USER_PATH)
         with open(self.cfg_file, 'w') as f:
             f.write(self.get_default_cfg())
 
@@ -34,6 +35,11 @@ class Config(object):
         with open(self.default_cfg_file) as f:
             return f.read()
 
-    def load_cfg():
+    def load_cfg(self):
         """Load the configuration file"""
         self._config.read(self.cfg_file)
+
+    @property
+    def get(self):
+        """Return the configuration object"""
+        return self._config.get
