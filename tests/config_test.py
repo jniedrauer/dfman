@@ -11,35 +11,33 @@ from dfman import config, const
 
 class TestConfig(unittest.TestCase):
 
-    @patch('os.makedirs')
-    @patch('os.path.isdir')
-    @patch('os.path.isfile')
-    @patch.object(dfman.config.Config, 'create_default_user_cfg')
-    def test_setup_config(self, mock_create_default, mock_isfile, mock_isdir, mock_makedirs):
-        mock_isdir.return_value = False
-        mock_isfile.return_value = False
+    @patch('dfman.config.os')
+    @patch.object(dfman.Config, 'create_default_user_cfg')
+    def test_setup_config(self, mock_create_default, mock_os):
+        mock_os.path.isdir.return_value = False
+        mock_os.path.isfile.return_value = False
         config = dfman.Config()
         config.setup_config()
 
-        mock_makedirs.assert_called_once_with(os.path.dirname(const.USER_CFG))
+        mock_os.makedirs.assert_called_once_with(const.USER_PATH)
         self.assertTrue(mock_create_default.called)
 
     def test_get_default_cfg(self):
         config = dfman.Config()
         res = config.get_default_cfg()
-        self.assertTrue(isinstance(res, basestring))
 
+        self.assertIsInstance(res, str)
 
-    @patch.object(dfman.config.Config, 'get_default_cfg')
-    @patch('builtins.open', new_callable=mock_open, read_data='1')
+    @patch('builtins.open', new_callable=mock_open)
+    @patch.object(dfman.Config, 'get_default_cfg')
     def test_create_default_user_cfg(self, mock_get_default_cfg, mock_open_obj):
-        expected_value = 'a_string'
-        mock_get_default_cfg.return_value = expected_value
+        expected_write = 'a_string'
+        mock_get_default_cfg.return_value = expected_write
         config = dfman.Config()
         config.create_default_user_cfg()
 
-        mock_open_obj.assert_called_with(const.USER_CFG, 'w')
-        mock_open_obj().write.assert_called_with(expected_value)
+        mock_open_obj.assert_called_once_with(os.path.join(const.USER_PATH, const.CFG), 'w')
+        mock_open_obj().write.assert_called_once_with(expected_write)
 
 
 if __name__ == '__main__':

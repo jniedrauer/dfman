@@ -55,7 +55,7 @@ rpm:
 sdist:
 	python setup.py sdist
 
-test: localinstall
+test:
 	python -m unittest discover -v --start-directory=$(TDIR) --pattern=*_test.py
 
 all: clean lint test docs sdist deb rpm
