@@ -55,13 +55,13 @@ class MainRuntime(object):
     def install_dotfiles(self):
         # pylint: disable=no-value-for-parameter
         """Install dotfiles based on defaults and overrides"""
-        if not os.path.isdir(self.config.get('dotfile_path', 'test')):
-            raise OSError('%s: No such directory' % self.config.get('dotfile_path'))
+        if not os.path.isdir(self.config.get('Globals', 'dotfile_path')):
+            raise OSError('%s: No such directory' % self.config.get('Globals', 'dotfile_path'))
 
         LOG.info(
             'Installing contents of %s to %s',
-            self.config.get('config_path'),
-            self.config.get('dotfile_path')
+            self.config.get('Globals', 'config_path'),
+            self.config.get('Globals', 'dotfile_path')
         )
 
         filemap = self.get_filemap()
