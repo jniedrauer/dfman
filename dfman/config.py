@@ -17,6 +17,7 @@ class Config(object):
         )
         defaults = {
             'verbose': 'false',
+            'backup_path': '%(user_home)s/.dfman/backups',
             'backup_format': '%%Y-%%m-%%d-%%H-%%M-%%S',
             'max_backups': '2',
             'dotfile_path': '%(user_home)s/.dotfiles',
