@@ -26,5 +26,4 @@ setup(
     classifiers=__pkginfo__['classifiers'],
     packages=[__pkginfo__['distname']],
     include_package_data=True,
-    package_data={'': ['resources/*']},
 )
