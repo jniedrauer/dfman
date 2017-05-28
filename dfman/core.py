@@ -25,7 +25,11 @@ class MainRuntime(object):
         """Runtime control method"""
         self.config.setup_config()
         # Set verbose if verbose specified in config or args
-        self.verbose = any([self.config.getboolean('Globals', 'verbose'), self.verbose])
+        self.verbose = any([
+            self.config.getboolean('Globals', 'verbose'),
+            self.verbose,
+            self.dry_run
+        ])
         self.create_runtime_directories()
         self.set_output_streams()
 
@@ -47,11 +51,13 @@ class MainRuntime(object):
         file_out.setLevel(self.config.get('Globals', 'loglevel'))
         LOG.addHandler(file_out)
 
+        console_out = logging.StreamHandler()
+        console_out.setFormatter(logging.Formatter('%(message)s'))
         if self.verbose:
-            console_out = logging.StreamHandler()
+            console_out.setLevel(logging.DEBUG)
+        else:
             console_out.setLevel(logging.INFO)
-            console_out.setFormatter(logging.Formatter('%(message)s'))
-            LOG.addHandler(console_out)
+        LOG.addHandler(console_out)
 
     def install_dotfiles(self):
         # pylint: disable=no-value-for-parameter
@@ -59,7 +65,7 @@ class MainRuntime(object):
         if not os.path.isdir(self.config.get('Globals', 'dotfile_path')):
             raise OSError('%s: No such directory' % self.config.get('Globals', 'dotfile_path'))
 
-        LOG.info(
+        LOG.debug(
             'Installing contents of %s to %s',
             self.config.get('Globals', 'config_path'),
             self.config.get('Globals', 'dotfile_path')
@@ -71,14 +77,14 @@ class MainRuntime(object):
                 LOG.warning('%s does not exist - it will be skipped', src)
                 continue
             if not self.does_symlink_already_exist(src, dest):
-                LOG.info('Backing up %s to %s', dest, self.config.get('Backups', 'backup_path'))
+                LOG.debug('Backing up %s to %s', dest, self.config.get('Backups', 'backup_path'))
                 if not self.backup_file(dest):
                     # No backup made, skip this file
                     continue
-                LOG.info('Linking %s -> %s', src, dest)
+                LOG.debug('Linking %s -> %s', src, dest)
                 self.create_link(src, dest)
             else:
-                LOG.info('%s already linked - skipping', dest)
+                LOG.debug('%s already linked - skipping', dest)
 
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
@@ -108,7 +114,7 @@ class MainRuntime(object):
         """Back up dest to backup dir if it isn't already
         a symlink to src"""
         if not os.path.exists(dest):
-            LOG.info("%s doesn't exist - skipping backup", dest)
+            LOG.debug("%s doesn't exist - skipping backup", dest)
             return True
         timestamp = datetime.now().strftime(self.config.get('Backups', 'backup_format'))
         backup_dest = os.path.join(

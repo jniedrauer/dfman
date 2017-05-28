@@ -32,6 +32,11 @@ class TestMainRuntime(unittest.TestCase):
 
         self.assertTrue(runtime.verbose)
 
+        # dry run is set to true with args, verbose is false
+        mc_return.getboolean.return_value = False
+        runtime = dfman.core.MainRuntime(False, True)
+        runtime.run_initial_setup()
+
     def test_get_distro(self):
         test_os = \
 b'''
