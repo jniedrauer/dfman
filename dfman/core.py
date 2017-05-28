@@ -5,6 +5,7 @@ import argparse
 import logging
 import os
 import shutil
+from configparser import NoSectionError
 from datetime import datetime
 from dfman import Config, const
 
@@ -92,7 +93,10 @@ class MainRuntime(object):
         """Get a dict of global and distro overrides"""
         overrides = dict(self.config.items('Overrides'))
         if self.distro:
-            overrides.update(self.config.items(self.distro))
+            try:
+                overrides.update(self.config.items(self.distro))
+            except NoSectionError:
+                pass
         return {
             os.path.join(self.config.get('Globals', 'dotfile_path'), key): value
             for key, value in overrides.items()
