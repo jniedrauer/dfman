@@ -75,8 +75,10 @@ class MainRuntime(object):
                 if not self.backup_file(dest):
                     # No backup made, skip this file
                     continue
-            LOG.info('Linked %s->%s', src, dest)
-            self.create_link(src, dest)
+                LOG.info('Linking %s -> %s', src, dest)
+                self.create_link(src, dest)
+            else:
+                LOG.info('%s already linked - skipping', dest)
 
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
@@ -106,7 +108,7 @@ class MainRuntime(object):
         """Back up dest to backup dir if it isn't already
         a symlink to src"""
         if not os.path.exists(dest):
-            LOG.info("%s doesn't exist, skipping", dest)
+            LOG.info("%s doesn't exist - skipping backup", dest)
             return True
         timestamp = datetime.now().strftime(self.config.get('Backups', 'backup_format'))
         backup_dest = os.path.join(
