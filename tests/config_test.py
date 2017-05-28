@@ -2,7 +2,6 @@
 
 
 import os
-import sys
 import tempfile
 import unittest
 from mock import mock_open, patch
@@ -21,8 +20,8 @@ class TestConfig(unittest.TestCase):
         mock_get_default_cfg.return_value = expected_write
         mock_isdir.return_value = False
 
-        config = dfman.Config()
-        config.create_default_user_cfg()
+        config_ = dfman.Config()
+        config_.create_default_user_cfg()
 
         mock_makedirs.assert_called_once_with(const.USER_PATH)
 
@@ -30,14 +29,14 @@ class TestConfig(unittest.TestCase):
         mock_open_obj().write.assert_called_once_with(expected_write)
 
     def test_get_default_cfg(self):
-        config = dfman.Config()
-        res = config.get_default_cfg()
+        config_ = dfman.Config()
+        res = config_.get_default_cfg()
 
         self.assertIsInstance(res, str)
 
     @patch('dfman.config.os.makedirs')
     def test_get_config_value(self, _):
-        config = dfman.Config()
+        config_ = dfman.Config()
         test_config = \
 b'''
 [Test]
@@ -48,11 +47,11 @@ config_path = %(user_home)s/.config
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.write(test_config)
             tmp.seek(0)
-            config.cfg_file = tmp.name
-            config.load_cfg()
+            config_.cfg_file = tmp.name
+            config_.load_cfg()
 
-            self.assertEqual(config.get('Test', 'testvalue'), '123')
-            self.assertEqual(config.get('Test', 'config_path'), '/test123/.config')
+            self.assertEqual(config_.get('Test', 'testvalue'), '123')
+            self.assertEqual(config_.get('Test', 'config_path'), '/test123/.config')
 
 
 if __name__ == '__main__':
