@@ -48,5 +48,15 @@ class Config(object):
 
     @property
     def get(self):
-        """Return the configuration object"""
+        """Return the configuration string"""
         return self._config.get
+
+    @property
+    def getboolean(self):
+        """Return the configuration boolean"""
+        return self._config.getboolean
+
+    @property
+    def getint(self):
+        """Return the configuration int"""
+        return self._config.getint
