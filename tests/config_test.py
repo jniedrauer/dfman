@@ -53,6 +53,24 @@ config_path = %(user_home)s/.config
             self.assertEqual(config_.get('Test', 'testvalue'), '123')
             self.assertEqual(config_.get('Test', 'config_path'), '/test123/.config')
 
+    def test_items(self):
+        config_ = dfman.Config()
+        expected_items = {'testvalue': '123'}
+        test_config = \
+b'''
+[Test]
+testvalue = 123
+'''
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.write(test_config)
+            tmp.seek(0)
+            config_.cfg_file = tmp.name
+            config_.load_cfg()
+
+            result = config_.items('Test')
+
+            self.assertEqual(dict(result), expected_items)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -66,7 +66,6 @@ class Config(object):
         """Return the configuration int"""
         return self._config.getint
 
-    @property
-    def items(self):
-        """Return all items in a configuration section"""
-        return self._config.items
+    def items(self, section):
+        """Return all items in a configuration section, excluding defaults"""
+        return [i for i in self._config.items(section) if i[0] not in self._config.defaults()]
