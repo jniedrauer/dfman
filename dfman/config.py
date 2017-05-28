@@ -17,10 +17,12 @@ class Config(object):
         )
         defaults = {
             'verbose': False,
-            'backup_format': '%Y-%m-%d-%H-%M-%S',
+            'backup_format': '%%Y-%%m-%%d-%%H-%%M-%%S',
             'backup_count': '2',
-            'dotfile_path': os.path.join(os.environ.get('HOME'), '.dotfiles'),
-            'config_path': os.path.join(os.environ.get('HOME'), '.config'),
+            'dotfile_path': '%(user_home)s/.dotfiles',
+            'config_path': '%(user_home)s/.config',
+            'user_home': os.environ.get('HOME'),
+            'HOME': os.environ.get('HOME')
         }
         self._config = configparser.ConfigParser(defaults)
 

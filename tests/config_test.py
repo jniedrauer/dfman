@@ -42,6 +42,8 @@ class TestConfig(unittest.TestCase):
 b'''
 [Test]
 testvalue = 123
+user_home = /test123
+config_path = %(user_home)s/.config
 '''
         with tempfile.NamedTemporaryFile() as tmp:
             tmp.write(test_config)
@@ -50,6 +52,7 @@ testvalue = 123
             config.load_cfg()
 
             self.assertEqual(config.get('Test', 'testvalue'), '123')
+            self.assertEqual(config.get('Test', 'config_path'), '/test123/.config')
 
 
 if __name__ == '__main__':
