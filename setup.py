@@ -3,7 +3,7 @@
 
 
 import os
-from distutils.core import setup
+from setuptools import setup
 
 
 BASE = os.path.dirname(__file__)
@@ -25,4 +25,6 @@ setup(
     scripts=__pkginfo__['scripts'],
     classifiers=__pkginfo__['classifiers'],
     packages=[__pkginfo__['distname']],
+    include_package_data=True,
+    package_data={'': ['resources/*']},
 )
