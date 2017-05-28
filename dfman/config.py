@@ -16,11 +16,13 @@ class Config(object):
             const.CFG
         )
         defaults = {
-            'verbose': False,
+            'verbose': 'false',
             'backup_format': '%%Y-%%m-%%d-%%H-%%M-%%S',
-            'backup_count': '2',
+            'max_backups': '2',
             'dotfile_path': '%(user_home)s/.dotfiles',
             'config_path': '%(user_home)s/.config',
+            'log': '%(user_home)s/.dfman/dfman.log',
+            'loglevel': 'INFO',
             'user_home': os.environ.get('HOME'),
             'HOME': os.environ.get('HOME')
         }
