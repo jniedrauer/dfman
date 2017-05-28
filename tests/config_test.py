@@ -51,6 +51,6 @@ testvalue = 123
 
             self.assertEqual(config.get('Test', 'testvalue'), '123')
 
-            
+
 if __name__ == '__main__':
     unittest.main()
