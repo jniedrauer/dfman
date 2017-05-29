@@ -41,7 +41,7 @@ class MainRuntime(object):
                 self.config.get('Backups', 'backup_path')
         ):
             if not os.path.isdir(path):
-                self.fileop.makedirs(path)
+                os.makedirs(path)
 
     def set_output_streams(self):
         """Set the output streams with logging"""
