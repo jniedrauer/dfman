@@ -1,4 +1,4 @@
-"""Test CLI module"""
+"""Test core module"""
 
 
 import os
