@@ -155,13 +155,6 @@ file2 = distoverride/file2
         )
         self.assertTrue(result)
 
-    @patch('dfman.core.os')
-    def test_create_link(self, mock_os):
-        runtime = dfman.core.MainRuntime(False, False)
-        runtime.create_link('test1', 'test2')
-
-        mock_os.symlink.assert_called_once_with('test1', 'test2')
-
     def test_does_symlink_already_exist(self):
         src = 'src'
         dest = 'dest'
@@ -187,6 +180,23 @@ file2 = distoverride/file2
             self.assertFalse(result)
         finally:
             shutil.rmtree(tmpdir)
+
+
+class TestFileOperator(unittest.TestCase):
+
+    @patch('dfman.core.shutil')
+    def test_move(self, mock_shutil):
+        dry_run = True
+        fileop = dfman.core.FileOperator(dry_run)
+        fileop.move('src', 'dest')
+
+        mock_shutil.move.assert_not_called()
+
+        dry_run = False
+        fileop = dfman.core.FileOperator(dry_run)
+        fileop.move('src', 'dest')
+
+        mock_shutil.move.assert_called_once_with('src', 'dest')
 
 
 if __name__ == '__main__':

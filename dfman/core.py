@@ -20,6 +20,7 @@ class MainRuntime(object):
         self.dry_run = dry_run
         self.config = Config()
         self.distro = self.get_distro()
+        self.fileop = FileOperator(self.dry_run)
 
     def run_initial_setup(self):
         """Runtime control method"""
@@ -40,7 +41,7 @@ class MainRuntime(object):
                 self.config.get('Backups', 'backup_path')
         ):
             if not os.path.isdir(path):
-                os.makedirs(path)
+                self.fileop.makedirs(path)
 
     def set_output_streams(self):
         """Set the output streams with logging"""
@@ -65,11 +66,8 @@ class MainRuntime(object):
         if not os.path.isdir(self.config.get('Globals', 'dotfile_path')):
             raise OSError('%s: No such directory' % self.config.get('Globals', 'dotfile_path'))
 
-        LOG.debug(
-            'Installing contents of %s to %s',
-            self.config.get('Globals', 'config_path'),
-            self.config.get('Globals', 'dotfile_path')
-        )
+        if self.dry_run:
+            LOG.info('Starting dry run')
 
         filemap = self.get_filemap()
         for src, dest in filemap.items():
@@ -82,9 +80,12 @@ class MainRuntime(object):
                     # No backup made, skip this file
                     continue
                 LOG.debug('Linking %s -> %s', src, dest)
-                self.create_link(src, dest)
+                self.fileop.symlink(src, dest)
             else:
                 LOG.debug('%s already linked - skipping', dest)
+
+        if self.dry_run:
+            LOG.info('Ending dry run')
 
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
@@ -124,13 +125,8 @@ class MainRuntime(object):
         if os.path.exists(backup_dest):
             LOG.warning('%s already exists - it will be skipped', backup_dest)
             return False
-        shutil.move(dest, backup_dest)
+        self.fileop.move(dest, backup_dest)
         return True
-
-    @staticmethod
-    def create_link(src, dest):
-        """Create a symlink of src->dest"""
-        os.symlink(src, dest)
 
     @staticmethod
     def does_symlink_already_exist(src, dest):
@@ -147,6 +143,31 @@ class MainRuntime(object):
                 if line.startswith('ID='):
                     return line.rstrip().split('ID=')[-1]
         return None
+
+
+class FileOperator(object):
+    # pylint: disable=no-self-argument,missing-docstring,not-callable,no-self-use
+    """Dry-run aware file operations"""
+    def __init__(self, dry_run):
+        self.dry_run = dry_run
+
+    def _not_dry_run(func):
+        def conditional(*args):
+            if not args[0].dry_run:
+                return func(*args)
+        return conditional
+
+    @_not_dry_run
+    def move(self, *args):
+        shutil.move(*args)
+
+    @_not_dry_run
+    def makedirs(self, *args):
+        os.makedirs(*args)
+
+    @_not_dry_run
+    def symlink(self, *args):
+        os.symlink(*args)
 
 
 def main():

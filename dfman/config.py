@@ -23,7 +23,7 @@ class Config(object):
             'dotfile_path': '%(user_home)s/.dotfiles',
             'config_path': '%(user_home)s/.config',
             'log': '%(user_home)s/.dfman/dfman.log',
-            'loglevel': 'INFO',
+            'loglevel': 'DEBUG',
             'user_home': os.environ.get('HOME'),
             'HOME': os.environ.get('HOME')
         }
