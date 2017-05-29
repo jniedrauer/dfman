@@ -1,6 +1,7 @@
 NAME=dfman
 VERSION=$(shell PYTHONPATH=. python -c "from $(NAME).__pkginfo__ import version; print(version)")
 VENV=venv
+PYTHON=python3
 PIP=$(VENV)/bin/pip
 PYLINT=$(VENV)/bin/pylint
 SDIR=$(NAME)
@@ -19,12 +20,12 @@ help:
 	@echo "  venv        setup virtualenv"
 
 $(PIP):
-	virtualenv $(VENV)
+	$(PYTHON) -m venv $(VENV)
 
 venv: $(VENV)/bin/activate
 
 $(VENV)/bin/activate: requirements.txt
-	test -d $(VENV) || virtualenv $(VENV)
+	test -d $(VENV) || $(PYTHON) -m venv $(VENV)
 	$(PIP) install -Ur requirements.txt
 
 clean:
