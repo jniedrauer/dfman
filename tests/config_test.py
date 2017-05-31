@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from mock import mock_open, patch
+import test_utils
 from context import dfman
 from dfman import config, const
 
@@ -38,16 +39,14 @@ class TestConfig(unittest.TestCase):
     def test_get_config_value(self, _):
         config_ = dfman.Config()
         test_config = \
-b'''
+'''
 [Test]
 testvalue = 123
 user_home = /test123
 config_path = %(user_home)s/.config
 '''
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(test_config)
-            tmp.seek(0)
-            config_.cfg_file = tmp.name
+        with test_utils.tempfile_with_content(test_config) as tmp:
+            config_.cfg_file = tmp
             config_.load_cfg()
 
             self.assertEqual(config_.get('Test', 'testvalue'), '123')
@@ -57,14 +56,12 @@ config_path = %(user_home)s/.config
         config_ = dfman.Config()
         expected_items = {'testvalue': '123'}
         test_config = \
-b'''
+'''
 [Test]
 testvalue = 123
 '''
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(test_config)
-            tmp.seek(0)
-            config_.cfg_file = tmp.name
+        with test_utils.tempfile_with_content(test_config) as tmp:
+            config_.cfg_file = tmp
             config_.load_cfg()
 
             result = config_.items('Test')

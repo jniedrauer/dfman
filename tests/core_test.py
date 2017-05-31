@@ -2,11 +2,11 @@
 
 
 import os
-import shutil
 import sys
-import tempfile
 import unittest
+from contextlib import contextmanager
 from mock import call, mock_open, patch
+import test_utils
 from context import dfman
 from dfman import config, const, core
 
@@ -39,23 +39,20 @@ class TestMainRuntime(unittest.TestCase):
 
     def test_get_distro(self):
         test_os = \
-b'''
+'''
 NAME="Scary Linux"
 ID=spooky
 PRETTY_NAME="Spooky Scary Linux"
 ANSI_COLOR="1;32"
 '''
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(test_os)
-            tmp.seek(0)
-
+        with test_utils.tempfile_with_content(test_os) as tmp:
             runtime = dfman.core.MainRuntime(False, False)
-            const.SYSTEMD_DISTINFO = tmp.name
+            const.SYSTEMD_DISTINFO = tmp
             self.assertEqual(runtime.get_distro(), 'spooky')
 
     def test_get_overrides(self):
         test_config = \
-b'''
+'''
 [Globals]
 dotfile_path = srcdir
 
@@ -66,11 +63,9 @@ file2 = dir2/file2
 [spooky]
 file2 = distoverride/file2
 '''
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(test_config)
-            tmp.seek(0)
+        with test_utils.tempfile_with_content(test_config) as tmp:
             config = dfman.Config()
-            config.cfg_file = tmp.name
+            config.cfg_file = tmp
             config.load_cfg()
 
         runtime = dfman.core.MainRuntime(False, False)
@@ -158,8 +153,7 @@ file2 = distoverride/file2
     def test_does_symlink_already_exist(self):
         src = 'src'
         dest = 'dest'
-        tmpdir = tempfile.mkdtemp()
-        try:
+        with test_utils.temp_directory() as tmpdir:
             srcpath = os.path.join(tmpdir, src)
             destpath = os.path.join(tmpdir, dest)
             open(srcpath, 'a').close()
@@ -178,8 +172,6 @@ file2 = distoverride/file2
             result = runtime.does_symlink_already_exist(srcpath, destpath)
 
             self.assertFalse(result)
-        finally:
-            shutil.rmtree(tmpdir)
 
 
 class TestFileOperator(unittest.TestCase):
