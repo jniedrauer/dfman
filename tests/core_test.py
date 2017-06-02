@@ -113,7 +113,7 @@ file2 = distoverride/file2
     @patch('dfman.core.shutil')
     def test_backup_file(self, mock_shutil, mock_config, mock_exists):
         mc = mock_config.return_value
-        mc.get.side_effect = ['timestamp', 'backup_path']
+        mc.get.return_value = 'backup_path'
         src = 'src'
         dest = 'dest'
         # File to back up doesn't exist so it should return success
@@ -128,9 +128,7 @@ file2 = distoverride/file2
         # File exists in src and dest so it should fail
         mock_exists.reset_mock()
         mock_exists.return_value = True
-        mc.reset_mock()
-        mc.get.side_effect = ['timestamp', 'backup_path']
-        calls = [call('dest'), call(os.path.join('backup_path', 'dest-timestamp'))]
+        calls = [call('dest'), call(os.path.join('backup_path', 'dest'))]
 
         result = runtime.backup_file(dest)
 
@@ -140,13 +138,11 @@ file2 = distoverride/file2
         # File exists in src but not in dest so it should actually make a backup
         mock_exists.reset_mock()
         mock_exists.side_effect = [True, False]
-        mc.reset_mock()
-        mc.get.side_effect = ['timestamp', 'backup_path']
 
         result = runtime.backup_file(dest)
 
         mock_shutil.move.assert_called_once_with(
-            'dest', os.path.join('backup_path', 'dest-timestamp')
+            'dest', os.path.join('backup_path', 'dest')
         )
         self.assertTrue(result)
 
@@ -172,6 +168,47 @@ file2 = distoverride/file2
             result = runtime.does_symlink_already_exist(srcpath, destpath)
 
             self.assertFalse(result)
+
+    @patch('dfman.core.os')
+    @patch('dfman.core.Config')
+    @patch.object(dfman.core.FileOperator, 'move')
+    @patch.object(dfman.core.FileOperator, 'unlink')
+    @patch.object(dfman.core.MainRuntime, 'get_filemap')
+    @patch.object(dfman.core.MainRuntime, 'does_symlink_already_exist')
+    def test_uninstall_dotfiles(
+            self, mock_test_symlink, mock_get_filemap, mock_unlink, mock_move, mock_config, mock_os
+    ):
+        mc = mock_config.return_value
+        mc.get.return_value = 'backup_path'
+
+        mock_get_filemap.return_value = {'dotfile_path/src': 'config_path/file'}
+        mock_os.path.isfile.return_value = False
+
+        # missing backup path
+        mock_os.path.isdir.return_value = False
+
+        runtime = dfman.core.MainRuntime(False, False)
+
+        with self.assertRaises(OSError):
+            runtime.uninstall_dotfiles()
+
+        # symlink not installed
+        mock_os.path.isdir.return_value = True
+        mock_test_symlink.return_value = False
+
+        runtime.uninstall_dotfiles()
+
+        mock_unlink.assert_not_called()
+
+        # symlink and backup exist
+        mock_os.path.exists.return_value = True
+        mock_test_symlink.return_value = True
+        mock_os.path.join.return_value = 'backup_path/file'
+
+        runtime.uninstall_dotfiles()
+
+        mock_unlink.assert_called_once_with('config_path/file')
+        mock_move.assert_called_once_with('backup_path/file', 'config_path/file')
 
 
 class TestFileOperator(unittest.TestCase):

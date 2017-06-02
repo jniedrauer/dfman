@@ -38,7 +38,7 @@ class MainRuntime(object):
         """Create directory tree for backups and logs"""
         for path in (
                 os.path.dirname(self.config.get('Globals', 'log')),
-                self.config.get('Backups', 'backup_path')
+                self.config.get('Globals', 'backup_path')
         ):
             if not os.path.isdir(path):
                 os.makedirs(path)
@@ -64,18 +64,16 @@ class MainRuntime(object):
         # pylint: disable=no-value-for-parameter
         """Install dotfiles based on defaults and overrides"""
         if not os.path.isdir(self.config.get('Globals', 'dotfile_path')):
-            raise OSError('%s: No such directory' % self.config.get('Globals', 'dotfile_path'))
+            raise FileNotFoundError(
+                '%s: No such directory' % self.config.get('Globals', 'dotfile_path')
+            )
 
-        if self.dry_run:
-            LOG.info('Starting dry run')
-
-        filemap = self.get_filemap()
-        for src, dest in filemap.items():
+        for src, dest in self.get_filemap().items():
             if not os.path.exists(src):
                 LOG.warning('%s does not exist - it will be skipped', src)
                 continue
             if not self.does_symlink_already_exist(src, dest):
-                LOG.debug('Backing up %s to %s', dest, self.config.get('Backups', 'backup_path'))
+                LOG.debug('Backing up %s to %s', dest, self.config.get('Globals', 'backup_path'))
                 if not self.backup_file(dest):
                     # No backup made, skip this file
                     continue
@@ -84,8 +82,28 @@ class MainRuntime(object):
             else:
                 LOG.debug('%s already linked - skipping', dest)
 
-        if self.dry_run:
-            LOG.info('Ending dry run')
+    def uninstall_dotfiles(self):
+        """Reverse install process based on configuration file"""
+        if not os.path.isdir(self.config.get('Globals', 'backup_path')):
+            raise FileNotFoundError(
+                '%s: No such directory' % self.config.get('Globals', 'backup_path')
+            )
+
+        for src, dest in self.get_filemap().items():
+            if self.does_symlink_already_exist(src, dest):
+                LOG.info('removing link for %s', dest)
+                self.fileop.unlink(dest)
+            else:
+                LOG.warning('%s is not linked - skipping', dest)
+                continue
+            backup = os.path.join(
+                self.config.get('Globals', 'backup_path'), os.path.basename(src)
+            )
+            if os.path.exists(backup):
+                self.fileop.move(backup, dest)
+                LOG.info('restored %s to %s', backup, src)
+            else:
+                LOG.warning('backup was not found for %s - not restored', src)
 
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
@@ -117,10 +135,9 @@ class MainRuntime(object):
         if not os.path.exists(dest):
             LOG.debug("%s doesn't exist - skipping backup", dest)
             return True
-        timestamp = datetime.now().strftime(self.config.get('Backups', 'backup_format'))
         backup_dest = os.path.join(
-            self.config.get('Backups', 'backup_path'),
-            '-'.join([os.path.basename(dest), timestamp])
+            self.config.get('Globals', 'backup_path'),
+            os.path.basename(dest)
         )
         if os.path.exists(backup_dest):
             LOG.warning('%s already exists - it will be skipped', backup_dest)
@@ -169,11 +186,15 @@ class FileOperator(object):
     def symlink(self, *args):
         os.symlink(*args)
 
+    @_not_dry_run
+    def unlink(self, *args):
+        os.unlink(*args)
+
 
 def main():
     """Read arguments and begin"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('operation', choices=['install', 'remove'], help='operation to perform')
+    parser.add_argument('operation', choices=['install', 'uninstall'], help='operation to perform')
     parser.add_argument('-v', '--verbose', help='print verbosely', action='store_true')
     parser.add_argument('--dry-run', help='dry run only', action='store_true')
     args = parser.parse_args()
@@ -181,5 +202,14 @@ def main():
     runtime = MainRuntime(args.verbose, args.dry_run)
     runtime.run_initial_setup()
 
+    if self.dry_run:
+        LOG.info('Starting dry run')
+
     if args.operation == 'install':
         runtime.install_dotfiles()
+    elif args.operation == 'uninstall':
+        runtime.uninstall_dotfiles()
+
+    if self.dry_run:
+        LOG.info('Ending dry run')
+
