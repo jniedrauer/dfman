@@ -110,6 +110,8 @@ class MainRuntime(object):
 
     def add_file(self, existing_file):
         """Add a file to tracking"""
+        if existing_file.endswith(os.sep):
+            existing_file = existing_file.rstrip(os.sep)
         path, basename = os.path.split(existing_file)
         dest = os.path.join(self.config.get('Globals', 'dotfile_path'), basename)
         if not os.path.exists(existing_file):
