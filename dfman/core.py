@@ -106,6 +106,28 @@ class MainRuntime(object):
             else:
                 LOG.error('Not restored: %s not found in backups', backup)
 
+    def add_file(self, existing_file):
+        """Add a file to tracking"""
+        path, basename = os.path.split(existing_file)
+        dest = os.path.join(self.config.get('Globals', 'dotfile_path'), basename)
+        if not os.path.exists(existing_file):
+            raise FileNotFoundError('%s: No such file or directory' % existing_file)
+        if os.path.exists(dest):
+            raise FileExistsError('%s: Already exists' % dest)
+        if not path == self.config.get('Globals', 'config_path'):
+            self.add_file_to_overrides(existing_file)
+
+        self.fileop.move(existing_file, dest)
+
+    def add_file_to_overrides(self, filepath):
+        """Add a file to overrides section of config file"""
+        filename = os.path.basename(filepath)
+        with open(os.path.join(const.USER_PATH, const.CFG)) as f:
+            content = f.readlines()
+        line = content.index('[Overrides]' + os.linesep) + 1
+        content.insert(line, '%s = %s%s' % (filename, filepath, os.linesep))
+        self.fileop.writelines(os.path.join(const.USER_PATH, const.CFG), 'w', content)
+
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
         filemap = {
@@ -191,11 +213,19 @@ class FileOperator(object):
     def unlink(self, *args):
         os.unlink(*args)
 
+    @_not_dry_run
+    def writelines(self, dest, mode, content):
+        with open(dest, mode) as f:
+            f.writelines(content)
+
 
 def main():
     """Read arguments and begin"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('operation', choices=['install', 'uninstall'], help='operation to perform')
+    parser.add_argument(
+        'operation', choices=['install', 'uninstall'], help='operation to perform'
+    )
+    parser.add_argument('-a', '--add', required=False, help='add a dotfile')
     parser.add_argument('-v', '--verbose', help='print verbosely', action='store_true')
     parser.add_argument('--dry-run', help='dry run only', action='store_true')
     args = parser.parse_args()
@@ -207,8 +237,13 @@ def main():
         LOG.info('STARTING DRY RUN')
 
     if args.operation == 'install':
+        if args.add:
+            runtime.add_file(args.add)
+            runtime.run_initial_setup() # Re-load config
         runtime.install_dotfiles()
     elif args.operation == 'uninstall':
+        if args.add:
+            parser.error('--add should not be used with uninstall')
         runtime.uninstall_dotfiles()
 
     if args.dry_run:

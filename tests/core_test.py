@@ -47,8 +47,12 @@ ANSI_COLOR="1;32"
 '''
         with test_utils.tempfile_with_content(test_os) as tmp:
             runtime = dfman.core.MainRuntime(False, False)
+            _tmp = const.SYSTEMD_DISTINFO
             const.SYSTEMD_DISTINFO = tmp
-            self.assertEqual(runtime.get_distro(), 'spooky')
+            try:
+                self.assertEqual(runtime.get_distro(), 'spooky')
+            finally:
+                const.SYSTEMD_DISTINFO = _tmp
 
     def test_get_overrides(self):
         test_config = \
@@ -209,6 +213,86 @@ file2 = distoverride/file2
 
         mock_unlink.assert_called_once_with('config_path/file')
         mock_move.assert_called_once_with('backup_path/file', 'config_path/file')
+
+    @patch('dfman.core.os.path.exists')
+    @patch('dfman.core.Config')
+    @patch.object(dfman.core.FileOperator, 'move')
+    @patch.object(dfman.core.MainRuntime, 'add_file_to_overrides')
+    def test_add_file(self, mock_add_override, mock_move, mock_config, mock_exists):
+        mc = mock_config.return_value
+        mc.get.side_effect = ['dotfile_path', 'config_path']
+        # added file doesn't exist and tracked file doesn't exist
+        mock_exists.side_effect = [False, False]
+
+        runtime = dfman.core.MainRuntime(False, False)
+        with self.assertRaises(FileNotFoundError):
+            runtime.add_file('test')
+
+        # added file exists but tracked file also exists
+        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mock_exists.side_effect = [True, True]
+
+        with self.assertRaises(FileExistsError):
+            runtime.add_file('test')
+
+        # added file exists, is not in default path, and file not in tracking
+        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mock_exists.side_effect = [True, False]
+
+        runtime.add_file('test')
+
+        mock_add_override.assert_called_once_with('test')
+        mock_move.assert_called_once_with('test', os.path.join('dotfile_path', 'test'))
+
+        # added file exists, is in default path, and file not in tracking
+        mock_add_override.reset_mock()
+        mock_move.reset_mock()
+        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mock_exists.side_effect = [True, False]
+
+        runtime.add_file('config_path/test')
+
+        mock_add_override.assert_not_called()
+        mock_move.assert_called_once_with(
+            'config_path/test', os.path.join('dotfile_path', 'test')
+        )
+
+    @patch('dfman.core.os.path.basename')
+    @patch('dfman.core.Config')
+    def test_add_file_to_overrides(self, mock_config, mock_basename):
+        mock_basename.return_value = 'test'
+        test_config = \
+'''
+[Generic]
+line = 1
+
+[Overrides]
+existing_value = 123
+'''
+
+        expected_write = \
+'''
+[Generic]
+line = 1
+
+[Overrides]
+test = testpath/test
+existing_value = 123
+'''
+
+        runtime = dfman.core.MainRuntime(False, False)
+
+        _tmp_path = const.USER_PATH
+        _tmp_cfg = const.CFG
+        try:
+            with test_utils.tempfile_with_content(test_config) as tmp:
+                const.USER_PATH, const.CFG = os.path.split(tmp)
+                runtime.add_file_to_overrides('testpath/test')
+                with open(tmp) as f:
+                    self.assertEqual(expected_write, f.read())
+        finally:
+            const.USER_PATH = _tmp_path
+            const.CFG = _tmp_cfg
 
 
 class TestFileOperator(unittest.TestCase):
