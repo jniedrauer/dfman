@@ -32,7 +32,7 @@ clean:
 	git clean -fdx
 
 deb:
-	python setup.py bdist_deb
+	$(PYTHON) setup.py bdist_deb
 
 dev: venv
 	$(PIP) install -Ur requirements.devel
@@ -44,13 +44,13 @@ lint:
 	$(PYLINT) $(NAME)
 
 rpm:
-	python setup.py bdist_rpm
+	$(PYTHON) setup.py bdist_rpm
 
 sdist:
-	python setup.py sdist
+	$(PYTHON) setup.py sdist
 
 test:
-	python -m unittest discover -v --start-directory=$(TDIR) --pattern=*_test.py
+	$(PYTHON) -m unittest discover -v --start-directory=$(TDIR) --pattern=*_test.py
 
 all: clean lint test docs sdist deb rpm
 
