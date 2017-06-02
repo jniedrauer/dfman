@@ -45,6 +45,8 @@ class MainRuntime(object):
 
     def set_output_streams(self):
         """Set the output streams with logging"""
+        if len(LOG.handlers) >= 2: # console and logfile
+            return
         LOG.setLevel(logging.DEBUG) # This only sets the minimum logging level
         log_format = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
         file_out = logging.FileHandler(self.config.get('Globals', 'log'))
@@ -248,4 +250,3 @@ def main():
 
     if args.dry_run:
         LOG.info('ENDING DRY RUN')
-
