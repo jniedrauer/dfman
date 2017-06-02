@@ -75,9 +75,7 @@ class MainRuntime(object):
                 LOG.warning('Skipped: %s does not exist', src)
                 continue
             if not self.does_symlink_already_exist(src, dest):
-                if self.backup_file(dest):
-                    LOG.debug('Backed up: %s to %s', dest, self.config.get('Globals', 'backup_path'))
-                else:
+                if not self.backup_file(dest):
                     # No backup made, skip this file
                     continue
                 self.fileop.symlink(src, dest)
@@ -122,6 +120,7 @@ class MainRuntime(object):
             self.add_file_to_overrides(existing_file)
 
         self.fileop.move(existing_file, dest)
+        LOG.debug('Added: %s', existing_file)
 
     def add_file_to_overrides(self, filepath):
         """Add a file to overrides section of config file"""
@@ -170,6 +169,7 @@ class MainRuntime(object):
             LOG.error('Skipped: %s already exists in backups', backup_dest)
             return False
         self.fileop.move(dest, backup_dest)
+        LOG.debug('Backed up: %s to %s', dest, self.config.get('Globals', 'backup_path'))
         return True
 
     @staticmethod
