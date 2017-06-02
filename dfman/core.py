@@ -70,17 +70,18 @@ class MainRuntime(object):
 
         for src, dest in self.get_filemap().items():
             if not os.path.exists(src):
-                LOG.warning('%s does not exist - it will be skipped', src)
+                LOG.warning('Skipped: %s does not exist', src)
                 continue
             if not self.does_symlink_already_exist(src, dest):
-                LOG.debug('Backing up %s to %s', dest, self.config.get('Globals', 'backup_path'))
-                if not self.backup_file(dest):
+                if self.backup_file(dest):
+                    LOG.debug('Backed up: %s to %s', dest, self.config.get('Globals', 'backup_path'))
+                else:
                     # No backup made, skip this file
                     continue
-                LOG.debug('Linking %s -> %s', src, dest)
                 self.fileop.symlink(src, dest)
+                LOG.debug('Linked: %s to %s', src, dest)
             else:
-                LOG.debug('%s already linked - skipping', dest)
+                LOG.debug('Skipped: %s already linked', dest)
 
     def uninstall_dotfiles(self):
         """Reverse install process based on configuration file"""
@@ -91,19 +92,19 @@ class MainRuntime(object):
 
         for src, dest in self.get_filemap().items():
             if self.does_symlink_already_exist(src, dest):
-                LOG.info('removing link for %s', dest)
                 self.fileop.unlink(dest)
+                LOG.debug('Unlinked: %s', dest)
             else:
-                LOG.warning('%s is not linked - skipping', dest)
+                LOG.debug('Skipped: %s is not linked', dest)
                 continue
             backup = os.path.join(
                 self.config.get('Globals', 'backup_path'), os.path.basename(src)
             )
             if os.path.exists(backup):
                 self.fileop.move(backup, dest)
-                LOG.info('restored %s to %s', backup, src)
+                LOG.debug('Restored: %s to %s', backup, src)
             else:
-                LOG.warning('backup was not found for %s - not restored', src)
+                LOG.error('Not restored: %s not found in backups', backup)
 
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
@@ -133,14 +134,14 @@ class MainRuntime(object):
         """Back up dest to backup dir if it isn't already
         a symlink to src"""
         if not os.path.exists(dest):
-            LOG.debug("%s doesn't exist - skipping backup", dest)
+            LOG.debug("Not backed up: %s doesn't exist", dest)
             return True
         backup_dest = os.path.join(
             self.config.get('Globals', 'backup_path'),
             os.path.basename(dest)
         )
         if os.path.exists(backup_dest):
-            LOG.warning('%s already exists - it will be skipped', backup_dest)
+            LOG.error('Skipped: %s already exists in backups', backup_dest)
             return False
         self.fileop.move(dest, backup_dest)
         return True
@@ -203,7 +204,7 @@ def main():
     runtime.run_initial_setup()
 
     if args.dry_run:
-        LOG.info('Starting dry run')
+        LOG.info('STARTING DRY RUN')
 
     if args.operation == 'install':
         runtime.install_dotfiles()
@@ -211,5 +212,5 @@ def main():
         runtime.uninstall_dotfiles()
 
     if args.dry_run:
-        LOG.info('Ending dry run')
+        LOG.info('ENDING DRY RUN')
 
