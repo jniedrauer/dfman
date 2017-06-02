@@ -202,7 +202,7 @@ def main():
     runtime = MainRuntime(args.verbose, args.dry_run)
     runtime.run_initial_setup()
 
-    if self.dry_run:
+    if args.dry_run:
         LOG.info('Starting dry run')
 
     if args.operation == 'install':
@@ -210,6 +210,6 @@ def main():
     elif args.operation == 'uninstall':
         runtime.uninstall_dotfiles()
 
-    if self.dry_run:
+    if args.dry_run:
         LOG.info('Ending dry run')
 
