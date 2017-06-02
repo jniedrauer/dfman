@@ -32,7 +32,7 @@ clean:
 	git clean -fdx
 
 deb:
-	echo 'nothing here yet'
+	python setup.py bdist_deb
 
 dev: venv
 	$(PIP) install -Ur requirements.devel
@@ -44,7 +44,7 @@ lint:
 	$(PYLINT) $(NAME)
 
 rpm:
-	echo 'nothing here yet'
+	python setup.py bdist_rpm
 
 sdist:
 	python setup.py sdist
