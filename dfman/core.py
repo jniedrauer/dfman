@@ -22,9 +22,9 @@ class MainRuntime(object):
         self.distro = self.get_distro()
         self.fileop = FileOperator(self.dry_run)
 
-    def run_initial_setup(self):
+    def run_initial_setup(self, init_cfg=None):
         """Runtime control method"""
-        self.config.setup_config()
+        self.config.setup_config(init_cfg=init_cfg)
         # Set verbose if verbose specified in config or args
         self.verbose = any([
             self.config.getboolean('Globals', 'verbose'),
@@ -229,13 +229,14 @@ def main():
     parser.add_argument(
         'operation', choices=['install', 'uninstall'], help='operation to perform'
     )
+    parser.add_argument('-i', '--init', required=False, help='provide initial configuration file')
     parser.add_argument('-a', '--add', required=False, help='add a dotfile')
     parser.add_argument('-v', '--verbose', help='print verbosely', action='store_true')
     parser.add_argument('--dry-run', help='dry run only', action='store_true')
     args = parser.parse_args()
 
     runtime = MainRuntime(args.verbose, args.dry_run)
-    runtime.run_initial_setup()
+    runtime.run_initial_setup(init_cfg=args.init)
 
     if args.dry_run:
         LOG.info('STARTING DRY RUN')
@@ -246,6 +247,8 @@ def main():
             runtime.run_initial_setup() # Re-load config
         runtime.install_dotfiles()
     elif args.operation == 'uninstall':
+        if args.init:
+            parser.error('--init should not be used with uninstall')
         if args.add:
             parser.error('--add should not be used with uninstall')
         runtime.uninstall_dotfiles()

@@ -4,7 +4,7 @@
 import os
 import tempfile
 import unittest
-from mock import mock_open, patch
+from mock import call, mock_open, patch
 import test_utils
 from context import dfman
 from dfman import config, const
@@ -14,11 +14,8 @@ class TestConfig(unittest.TestCase):
 
     @patch('dfman.config.os.path.isdir')
     @patch('dfman.config.os.makedirs')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch.object(dfman.Config, 'get_default_cfg')
-    def test_create_default_user_cfg(self, mock_get_default_cfg, mock_open_obj, mock_isdir, mock_makedirs):
-        expected_write = 'a_string'
-        mock_get_default_cfg.return_value = expected_write
+    @patch('builtins.open', new_callable=mock_open, read_data='a_string')
+    def test_create_default_user_cfg(self, mock_open_obj, mock_isdir, mock_makedirs):
         mock_isdir.return_value = False
 
         config_ = dfman.Config()
@@ -26,14 +23,12 @@ class TestConfig(unittest.TestCase):
 
         mock_makedirs.assert_called_once_with(const.USER_PATH)
 
-        mock_open_obj.assert_called_once_with(os.path.join(const.USER_PATH, const.CFG), 'w')
-        mock_open_obj().write.assert_called_once_with(expected_write)
-
-    def test_get_default_cfg(self):
-        config_ = dfman.Config()
-        res = config_.get_default_cfg()
-
-        self.assertIsInstance(res, str)
+        calls = [
+            call(os.path.join(const.USER_PATH, const.CFG), 'w'),
+            call(config_.default_cfg_file)
+        ]
+        mock_open_obj.assert_has_calls(calls, any_order=True)
+        mock_open_obj().write.assert_called_once_with('a_string')
 
     @patch('dfman.config.os.makedirs')
     def test_get_config_value(self, _):

@@ -27,23 +27,22 @@ class Config(object):
         }
         self._config = configparser.ConfigParser(defaults)
 
-    def setup_config(self):
+    def setup_config(self, init_cfg=None):
         """Initialize configuration files and directories"""
         if not os.path.isfile(self.cfg_file):
-            self.create_default_user_cfg()
+            self.create_default_user_cfg(init_cfg=init_cfg)
+        elif init_cfg:
+            raise FileExistsError('%s: Already exists' % self.cfg_file)
         self.load_cfg()
 
-    def create_default_user_cfg(self):
+    def create_default_user_cfg(self, init_cfg=None):
         """Create the stock user config file"""
+        cfg = init_cfg or self.default_cfg_file
         if not os.path.isdir(const.USER_PATH):
             os.makedirs(const.USER_PATH)
         with open(self.cfg_file, 'w') as f:
-            f.write(self.get_default_cfg())
-
-    def get_default_cfg(self):
-        """Return the default config file as text"""
-        with open(self.default_cfg_file) as f:
-            return f.read()
+            with open(cfg) as cfg_f:
+                f.write(cfg_f.read())
 
     def load_cfg(self):
         """Load the configuration file"""
