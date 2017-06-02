@@ -18,7 +18,7 @@ class Config(object):
         defaults = {
             'verbose': 'false',
             'backup_path': '%(user_home)s/.dfman/backups',
-            'dotfile_path': '%(user_home)s/.dotfiles',
+            'dotfile_path': '%(user_home)s/.dotfiles/files',
             'config_path': '%(user_home)s/.config',
             'log': '%(user_home)s/.dfman/dfman.log',
             'loglevel': 'DEBUG',
