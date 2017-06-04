@@ -37,15 +37,17 @@ class TestConfig(unittest.TestCase):
 '''
 [Test]
 testvalue = 123
-user_home = /test123
-config_path = %(user_home)s/.config
+config_path = ~/.config
 '''
         with test_utils.tempfile_with_content(test_config) as tmp:
             config_.cfg_file = tmp
             config_.load_cfg()
 
             self.assertEqual(config_.get('Test', 'testvalue'), '123')
-            self.assertEqual(config_.get('Test', 'config_path'), '/test123/.config')
+            self.assertEqual(
+                config_.getpath('Test', 'config_path'),
+                os.path.join(os.environ.get('HOME'),'.config')
+            )
 
     def test_items(self):
         config_ = dfman.Config()

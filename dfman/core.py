@@ -37,8 +37,8 @@ class MainRuntime(object):
     def create_runtime_directories(self):
         """Create directory tree for backups and logs"""
         for path in (
-                os.path.dirname(self.config.get('Globals', 'log')),
-                self.config.get('Globals', 'backup_path')
+                os.path.dirname(self.config.getpath('Globals', 'log')),
+                self.config.getpath('Globals', 'backup_path')
         ):
             if not os.path.isdir(path):
                 os.makedirs(path)
@@ -49,7 +49,7 @@ class MainRuntime(object):
             return
         LOG.setLevel(logging.DEBUG) # This only sets the minimum logging level
         log_format = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
-        file_out = logging.FileHandler(self.config.get('Globals', 'log'))
+        file_out = logging.FileHandler(self.config.getpath('Globals', 'log'))
         file_out.setFormatter(log_format)
         file_out.setLevel(self.config.get('Globals', 'loglevel'))
         LOG.addHandler(file_out)
@@ -65,9 +65,9 @@ class MainRuntime(object):
     def install_dotfiles(self):
         # pylint: disable=no-value-for-parameter
         """Install dotfiles based on defaults and overrides"""
-        if not os.path.isdir(self.config.get('Globals', 'dotfile_path')):
+        if not os.path.isdir(self.config.getpath('Globals', 'dotfile_path')):
             raise FileNotFoundError(
-                '%s: No such directory' % self.config.get('Globals', 'dotfile_path')
+                '%s: No such directory' % self.config.getpath('Globals', 'dotfile_path')
             )
 
         for src, dest in self.get_filemap().items():
@@ -85,9 +85,9 @@ class MainRuntime(object):
 
     def uninstall_dotfiles(self):
         """Reverse install process based on configuration file"""
-        if not os.path.isdir(self.config.get('Globals', 'backup_path')):
+        if not os.path.isdir(self.config.getpath('Globals', 'backup_path')):
             raise FileNotFoundError(
-                '%s: No such directory' % self.config.get('Globals', 'backup_path')
+                '%s: No such directory' % self.config.getpath('Globals', 'backup_path')
             )
 
         for src, dest in self.get_filemap().items():
@@ -98,7 +98,7 @@ class MainRuntime(object):
                 LOG.debug('Skipped: %s is not linked', dest)
                 continue
             backup = os.path.join(
-                self.config.get('Globals', 'backup_path'), os.path.basename(src)
+                self.config.getpath('Globals', 'backup_path'), os.path.basename(src)
             )
             if os.path.exists(backup):
                 self.fileop.move(backup, dest)
@@ -113,12 +113,12 @@ class MainRuntime(object):
         path, basename = os.path.split(existing_file)
         if path == os.environ.get('HOME'):
             path = '~'
-        dest = os.path.join(self.config.get('Globals', 'dotfile_path'), basename)
+        dest = os.path.join(self.config.getpath('Globals', 'dotfile_path'), basename)
         if not os.path.exists(existing_file):
             raise FileNotFoundError('%s: No such file or directory' % existing_file)
         if os.path.exists(dest):
             raise FileExistsError('%s: Already exists' % dest)
-        if not path == self.config.get('Globals', 'config_path'):
+        if not path == self.config.getpath('Globals', 'config_path'):
             self.add_file_to_overrides(os.path.join(path, basename))
 
         self.fileop.move(existing_file, dest)
@@ -136,9 +136,9 @@ class MainRuntime(object):
     def get_filemap(self):
         """Return a map of all file sources and destinations with overrides"""
         filemap = {
-            os.path.join(self.config.get('Globals', 'dotfile_path'), i):
-                os.path.join(self.config.get('Globals', 'config_path'), i)
-            for i in os.listdir(self.config.get('Globals', 'dotfile_path'))
+            os.path.join(self.config.getpath('Globals', 'dotfile_path'), i):
+                os.path.join(self.config.getpath('Globals', 'config_path'), i)
+            for i in os.listdir(self.config.getpath('Globals', 'dotfile_path'))
         }
         overrides = self.get_overrides()
         override_destinations = [
@@ -152,14 +152,14 @@ class MainRuntime(object):
 
     def get_overrides(self):
         """Get a dict of global and distro overrides"""
-        overrides = dict(self.config.items('Overrides'))
+        overrides = dict(self.config.pathitems('Overrides'))
         if self.distro:
             try:
-                overrides.update(self.config.items(self.distro))
+                overrides.update(self.config.pathitems(self.distro))
             except NoSectionError:
                 pass
         return {
-            os.path.join(self.config.get('Globals', 'dotfile_path'), key): value
+            os.path.join(self.config.getpath('Globals', 'dotfile_path'), key): value
             for key, value in overrides.items()
         }
 
@@ -170,14 +170,14 @@ class MainRuntime(object):
             LOG.debug("Not backed up: %s doesn't exist", dest)
             return True
         backup_dest = os.path.join(
-            self.config.get('Globals', 'backup_path'),
+            self.config.getpath('Globals', 'backup_path'),
             os.path.basename(dest)
         )
         if os.path.exists(backup_dest):
             LOG.error('Skipped: %s already exists in backups', backup_dest)
             return False
         self.fileop.move(dest, backup_dest)
-        LOG.debug('Backed up: %s to %s', dest, self.config.get('Globals', 'backup_path'))
+        LOG.debug('Backed up: %s to %s', dest, self.config.getpath('Globals', 'backup_path'))
         return True
 
     @staticmethod

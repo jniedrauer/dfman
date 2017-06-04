@@ -83,7 +83,7 @@ file2 = distoverride/file2
     @patch('dfman.core.Config')
     def test_create_runtime_directories(self, mock_config, mock_os):
         mc = mock_config.return_value
-        mc.get.return_value = 'backup_path'
+        mc.getpath.return_value = 'backup_path'
         mock_os.path.dirname.return_value = 'logpath'
         mock_os.path.isdir.return_value = False
 
@@ -98,7 +98,7 @@ file2 = distoverride/file2
     @patch.object(dfman.core.MainRuntime, 'get_overrides')
     def test_get_filemap(self, mock_overrides, mock_config, mock_listdir):
         mc = mock_config.return_value
-        mc.get.return_value = 'test_path'
+        mc.getpath.return_value = 'test_path'
         mock_listdir.return_value = ['1', '2']
         overrides = {os.path.join('test_path', '1'): os.path.join('test_path', '3')}
         mock_overrides.return_value = overrides
@@ -131,7 +131,7 @@ file2 = distoverride/file2
     @patch('dfman.core.shutil')
     def test_backup_file(self, mock_shutil, mock_config, mock_exists):
         mc = mock_config.return_value
-        mc.get.return_value = 'backup_path'
+        mc.getpath.return_value = 'backup_path'
         src = 'src'
         dest = 'dest'
         # File to back up doesn't exist so it should return success
@@ -197,7 +197,7 @@ file2 = distoverride/file2
             self, mock_test_symlink, mock_get_filemap, mock_unlink, mock_move, mock_config, mock_os
     ):
         mc = mock_config.return_value
-        mc.get.return_value = 'backup_path'
+        mc.getpath.return_value = 'backup_path'
 
         mock_get_filemap.return_value = {'dotfile_path/src': 'config_path/file'}
         mock_os.path.isfile.return_value = False
@@ -234,7 +234,7 @@ file2 = distoverride/file2
     @patch.object(dfman.core.MainRuntime, 'add_file_to_overrides')
     def test_add_file(self, mock_add_override, mock_move, mock_config, mock_exists):
         mc = mock_config.return_value
-        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mc.getpath.side_effect = ['dotfile_path', 'config_path']
         # added file doesn't exist and tracked file doesn't exist
         mock_exists.side_effect = [False, False]
 
@@ -243,14 +243,14 @@ file2 = distoverride/file2
             runtime.add_file('test')
 
         # added file exists but tracked file also exists
-        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mc.getpath.side_effect = ['dotfile_path', 'config_path']
         mock_exists.side_effect = [True, True]
 
         with self.assertRaises(FileExistsError):
             runtime.add_file('test')
 
         # added file exists, is not in default path, and file not in tracking
-        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mc.getpath.side_effect = ['dotfile_path', 'config_path']
         mock_exists.side_effect = [True, False]
 
         runtime.add_file('test')
@@ -261,7 +261,7 @@ file2 = distoverride/file2
         # added file exists, is in default path, and file not in tracking
         mock_add_override.reset_mock()
         mock_move.reset_mock()
-        mc.get.side_effect = ['dotfile_path', 'config_path']
+        mc.getpath.side_effect = ['dotfile_path', 'config_path']
         mock_exists.side_effect = [True, False]
 
         runtime.add_file('config_path/test')

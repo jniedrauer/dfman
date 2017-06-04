@@ -51,6 +51,10 @@ class Config(object):
         """Return the configuration string"""
         return self._config.get
 
+    def getpath(self, *args):
+        """Return the configuration path with expansion"""
+        return os.path.expanduser(self._config.get(*args))
+
     @property
     def getboolean(self):
         """Return the configuration boolean"""
@@ -63,4 +67,14 @@ class Config(object):
 
     def items(self, section):
         """Return all items in a configuration section, excluding defaults"""
-        return [i for i in self._config.items(section) if i[0] not in self._config.defaults()]
+        return [
+            i for i in self._config.items(section)
+            if i[0] not in self._config.defaults()
+        ]
+
+    def pathitems(self, section):
+        """Return all items with path expansion"""
+        return {
+            key: os.path.expanduser(value)
+            for key, value in dict(self.items(section)).items()
+        }
