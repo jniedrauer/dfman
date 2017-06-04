@@ -112,6 +112,20 @@ file2 = distoverride/file2
 
         self.assertEqual(result, expected)
 
+        # Test that destination overrides work as expected
+        mock_listdir.return_value = ['1', '2', '3']
+        overrides = {os.path.join('test_path', '3'): os.path.join('test_path', '1')}
+        mock_overrides.return_value = overrides
+        expected = {
+            os.path.join('test_path', '3'): os.path.join('test_path', '1'),
+            os.path.join('test_path', '2'): os.path.join('test_path', '2')
+        }
+
+        runtime = dfman.core.MainRuntime(False, False)
+        result = runtime.get_filemap()
+
+        self.assertEqual(result, expected)
+
     @patch('dfman.core.os.path.exists')
     @patch('dfman.core.Config')
     @patch('dfman.core.shutil')

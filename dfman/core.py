@@ -141,6 +141,12 @@ class MainRuntime(object):
             for i in os.listdir(self.config.get('Globals', 'dotfile_path'))
         }
         overrides = self.get_overrides()
+        override_destinations = [
+            key for key, value in filemap.items()
+            if value in overrides.values()
+        ]
+        for key in override_destinations:
+            del filemap[key]
         filemap.update(overrides)
         return filemap
 
