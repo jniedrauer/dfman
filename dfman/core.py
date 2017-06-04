@@ -111,13 +111,15 @@ class MainRuntime(object):
         if existing_file.endswith(os.sep):
             existing_file = existing_file.rstrip(os.sep)
         path, basename = os.path.split(existing_file)
+        if path == os.environ.get('HOME'):
+            path = '~'
         dest = os.path.join(self.config.get('Globals', 'dotfile_path'), basename)
         if not os.path.exists(existing_file):
             raise FileNotFoundError('%s: No such file or directory' % existing_file)
         if os.path.exists(dest):
             raise FileExistsError('%s: Already exists' % dest)
         if not path == self.config.get('Globals', 'config_path'):
-            self.add_file_to_overrides(existing_file)
+            self.add_file_to_overrides(os.path.join(path, basename))
 
         self.fileop.move(existing_file, dest)
         LOG.debug('Added: %s', existing_file)
