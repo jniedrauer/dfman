@@ -111,8 +111,8 @@ class MainRuntime(object):
         if existing_file.endswith(os.sep):
             existing_file = existing_file.rstrip(os.sep)
         path, basename = os.path.split(existing_file)
-        if path == os.environ.get('HOME'):
-            path = '~'
+        if path.startswith(os.environ.get('HOME')):
+            path = '~' + path.split(os.environ.get('HOME'))[-1]
         dest = os.path.join(self.config.getpath('Globals', 'dotfile_path'), basename)
         if not os.path.exists(existing_file):
             raise FileNotFoundError('%s: No such file or directory' % existing_file)
