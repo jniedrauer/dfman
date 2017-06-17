@@ -8,7 +8,7 @@
 `make dev`
 
 ## Run unit tests
-`make tests`
+`make test`
 
 ## Run linting
 `make lint`
