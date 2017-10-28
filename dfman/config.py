@@ -24,6 +24,7 @@ class Config(object):
             'loglevel': 'DEBUG',
         }
         self._config = configparser.ConfigParser(defaults)
+        self._config.optionxform=str
 
     def setup_config(self, init_cfg=None):
         """Initialize configuration files and directories"""
